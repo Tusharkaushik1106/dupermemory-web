@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DuperMemory — One click. Five AIs. Zero copy-paste.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@400;500&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --deep:      #0D0D08;
+      --accent:    #41431B;
+      --sage:      #AEB784;
+      --stone:     #E3DBBB;
+      --parchment: #F8F3E1;
+      --text:      #F8F3E1;
+      --muted:     #AEB784;
+    }
+
+    html.lenis, html.lenis body { height: auto; }
+    .lenis.lenis-smooth { scroll-behavior: auto; }
+
+    body {
+      background: var(--deep);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* grain — DISABLED for performance (fullscreen SVG filter = constant repaint) */
+
+    /* ─── Scroll Progress ─── */
+    #scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      width: 0%;
+      height: 1px;
+      background: var(--sage);
+      z-index: 10000;
+      pointer-events: none;
+      transform-origin: left;
+    }
+
+    /* ─── Custom Cursor ─── */
+    #cursor {
+      position: fixed;
+      width: 8px; height: 8px;
+      background: var(--sage);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+    }
+    #cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1px solid rgba(174,183,132,0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+    body:hover #cursor { opacity: 1; }
+
+    /* ─── Navbar ─── */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 64px;
+      transition: padding .35s ease, background .35s ease, border-color .35s ease;
+      border-bottom: 1px solid transparent;
+    }
+    #nav.scrolled {
+      padding: 16px 64px;
+      background: rgba(13,13,8,.96);
+      border-bottom-color: var(--accent);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: .03em;
+    }
+    .nav-cta {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      color: var(--sage);
+      border: 1px solid var(--sage);
+      padding: 10px 26px;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: background .22s ease, color .22s ease;
+    }
+    .nav-cta:hover { background: var(--sage); color: var(--deep); }
+
+    /* ─── HERO — 3D behind centered text ─── */
+    #hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .hero-3d {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    #hero-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #hero-canvas:active { cursor: grabbing; }
+    .hero-3d-hint {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: var(--accent);
+      text-transform: uppercase;
+      opacity: 0.5;
+      pointer-events: none;
+      transition: opacity .4s;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 900px;
+      padding: 0 64px;
+      pointer-events: none;
+    }
+    .hero-text {
+      position: relative;
+      pointer-events: auto;
+    }
+    .hero-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .22em;
+      color: var(--sage);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .hero-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(48px, 8vw, 110px);
+      line-height: 1.0;
+      letter-spacing: -.02em;
+      color: var(--text);
+    }
+    .hero-line {
+      display: block;
+      overflow: hidden;
+      line-height: 1.08;
+    }
+    .hero-line:nth-child(1) { font-weight: 300; }
+    .hero-line:nth-child(2) { font-weight: 600; }
+    .hero-line:nth-child(3) { font-weight: 300; }
+    .h-char { display: inline-block; }
+    .hero-sub {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.72;
+      max-width: 520px;
+      margin: 28px auto 36px;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: .04em;
+      color: var(--deep);
+      background: var(--sage);
+      padding: 17px 44px;
+      text-decoration: none;
+      display: inline-block;
+      transition: background .22s ease;
+    }
+    .btn-primary:hover { background: var(--stone); }
+
+    .btn-link {
+      font-size: 15px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: .02em;
+      transition: color .2s;
+    }
+    .btn-link:hover { color: var(--text); }
+
+    /* ─── Marquee ─── */
+    .marquee-wrap {
+      overflow: hidden;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--accent);
+      border-top: 1px solid var(--accent);
+    }
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 28s linear infinite;
+    }
+    .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
+    .marquee-item {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      white-space: nowrap;
+      padding: 0 28px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ─── Sections ─── */
+    .section-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 160px 64px;
+      position: relative;
+    }
+    .label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .2em;
+      color: var(--sage);
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      display: block;
+    }
+    .section-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(38px, 4.5vw, 68px);
+      font-weight: 300;
+      line-height: 1.08;
+      letter-spacing: -.015em;
+      color: var(--text);
+      will-change: transform;
+    }
+
+    .section-bg-num {
+      position: absolute;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 200px;
+      font-weight: 600;
+      color: var(--accent);
+      opacity: 0.04;
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      top: 80px;
+      right: 40px;
+      will-change: transform;
+    }
+
+    .section-divider {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      height: 80px;
+    }
+    .section-divider .div-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: var(--accent);
+      will-change: transform;
+    }
+    .section-divider .div-line:nth-child(1) { top: 50%; }
+    .section-divider .div-line:nth-child(2) { top: 30%; opacity: 0.3; }
+    .section-divider .div-line:nth-child(3) { top: 70%; opacity: 0.15; }
+
+    /* ─── Steps ─── */
+    .steps { margin-top: 88px; }
+    .step {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      padding: 80px 0;
+      border-top: 1px solid var(--accent);
+      align-items: start;
+      position: relative;
+      cursor: default;
+    }
+    /* Animated accent line on top border */
+    .step::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--sage), var(--parchment));
+      transition: width .6s cubic-bezier(.22, 1, .36, 1);
+    }
+    .step:hover::before { width: 100%; }
+    .step:last-child { border-bottom: 1px solid var(--accent); }
+    .step:last-child::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--sage), var(--parchment));
+      transition: width .6s cubic-bezier(.22, 1, .36, 1);
+    }
+    .step:last-child:hover::after { width: 100%; }
+    .step:nth-child(even) .step-content { order: 2; }
+    .step:nth-child(even) .step-visual  { order: 1; }
+
+    .step-content {
+      transition: transform .5s cubic-bezier(.22, 1, .36, 1);
+    }
+    .step:hover .step-content {
+      transform: translateX(12px);
+    }
+    .step:nth-child(even):hover .step-content {
+      transform: translateX(-12px);
+    }
+
+    .step-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .14em;
+      color: var(--sage);
+      margin-bottom: 20px;
+      will-change: transform;
+      transition: color .4s ease, letter-spacing .4s ease;
+    }
+    .step:hover .step-num {
+      color: var(--parchment);
+      letter-spacing: .22em;
+    }
+    .step-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(26px, 3vw, 42px);
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 18px;
+      line-height: 1.2;
+      transition: color .4s ease;
+    }
+    .step:hover .step-title {
+      color: var(--parchment);
+    }
+    .step-body {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.76;
+      transition: opacity .4s ease;
+    }
+    .step:hover .step-body {
+      opacity: .85;
+    }
+    .step-visual {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      position: relative;
+    }
+    .step-big-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(100px, 12vw, 180px);
+      font-weight: 300;
+      color: var(--accent);
+      opacity: 0.12;
+      line-height: 1;
+      will-change: transform;
+      transition: opacity .5s cubic-bezier(.22, 1, .36, 1),
+                  transform .5s cubic-bezier(.22, 1, .36, 1),
+                  color .5s ease,
+                  text-shadow .5s ease;
+    }
+    .step:hover .step-big-num {
+      opacity: 0.3;
+      transform: scale(1.12) translateY(-8px);
+      color: var(--sage);
+      text-shadow: 0 0 60px rgba(174, 183, 132, 0.15);
+    }
+
+    /* ─── Stats ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 40px;
+      text-align: center;
+      padding: 40px 0;
+      perspective: 800px;
+    }
+    .stat-item {
+      padding: 40px 0;
+      position: relative;
+      cursor: default;
+      transform-style: preserve-3d;
+      transition: transform .5s cubic-bezier(.22, 1, .36, 1);
+    }
+    .stat-item::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(174,183,132,.08) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      transition: width .6s cubic-bezier(.22, 1, .36, 1), height .6s cubic-bezier(.22, 1, .36, 1);
+      pointer-events: none;
+    }
+    .stat-item:hover::before {
+      width: 280px;
+      height: 280px;
+    }
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(80px, 10vw, 140px);
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 16px;
+      transition: transform .5s cubic-bezier(.22, 1, .36, 1),
+                  color .4s ease,
+                  text-shadow .4s ease;
+    }
+    .stat-item:hover .stat-num {
+      transform: scale(1.1);
+      color: var(--parchment);
+      text-shadow: 0 0 40px rgba(174, 183, 132, 0.2);
+    }
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      transition: letter-spacing .5s cubic-bezier(.22, 1, .36, 1),
+                  color .4s ease;
+    }
+    .stat-item:hover .stat-label {
+      letter-spacing: .32em;
+      color: var(--sage);
+    }
+
+    /* ─── Features list ─── */
+    .features-list { margin-top: 80px; }
+    .feat-row {
+      display: grid;
+      grid-template-columns: 80px 280px 1fr;
+      gap: 48px;
+      padding: 52px 0;
+      border-top: 1px solid transparent;
+      align-items: start;
+      position: relative;
+      cursor: default;
+      transition: padding .4s cubic-bezier(.25,.1,.25,1), background .4s ease;
+    }
+    /* Animated top border line */
+    .feat-row::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 0%;
+      height: 1px;
+      background: var(--sage);
+      transition: width .6s cubic-bezier(.25,.1,.25,1);
+    }
+    .feat-row.is-visible::before { width: 100%; }
+    .feat-row:last-child::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0%;
+      height: 1px;
+      background: var(--sage);
+      transition: width .6s cubic-bezier(.25,.1,.25,1) .15s;
+    }
+    .feat-row:last-child.is-visible::after { width: 100%; }
+
+    /* Hover state */
+    .feat-row:hover {
+      padding-left: 24px;
+      padding-right: 24px;
+      background: rgba(65,67,27,.06);
+    }
+    .feat-row:hover .feat-num { color: var(--stone); }
+    .feat-row:hover .feat-title { color: var(--parchment); }
+    .feat-row:hover .feat-body { color: var(--stone); }
+    .feat-row:hover::before { background: var(--stone); width: 100%; }
+
+    .feat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .1em;
+      color: var(--sage);
+      padding-top: 6px;
+      transition: color .35s ease, transform .35s ease;
+    }
+    .feat-row:hover .feat-num { transform: translateY(-2px); }
+    .feat-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(24px, 2.5vw, 34px);
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.18;
+      transition: color .35s ease, transform .35s ease;
+    }
+    .feat-row:hover .feat-title { transform: translateX(6px); }
+    .feat-body {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.72;
+      transition: color .35s ease, transform .35s ease;
+    }
+    .feat-row:hover .feat-body { transform: translateX(4px); }
+
+    /* ─── Memory ─── */
+    #memory {
+      position: relative;
+      border-top: 1px solid var(--accent);
+      border-bottom: 1px solid var(--accent);
+    }
+    .memory-bg-text {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(100px, 16vw, 260px);
+      font-weight: 600;
+      color: var(--accent);
+      opacity: 0.04;
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      will-change: transform;
+    }
+    #memory .section-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 64px;
+      align-items: start;
+    }
+    .mem-heading {
+      font-size: clamp(32px, 3.5vw, 52px);
+    }
+    .mem-body {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.76;
+      margin-top: 32px;
+    }
+    .code-block {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      line-height: 1.9;
+      color: var(--sage);
+      background: var(--deep);
+      border: 1px solid var(--accent);
+      padding: 32px 36px;
+      min-height: 320px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: hidden;
+    }
+
+    /* ─── Install ─── */
+    #install { text-align: center; }
+    .install-sub { font-size: 17px; color: var(--muted); margin-top: 20px; }
+    .install-steps { max-width: 620px; margin: 80px auto 0; text-align: left; overflow: visible; }
+    .i-step {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 24px;
+      padding: 30px 0;
+      border-top: 1px solid var(--accent);
+      align-items: start;
+      position: relative;
+      cursor: pointer;
+      transition: background .4s ease;
+    }
+    .i-step:hover {
+      background: rgba(65, 67, 27, .06);
+    }
+    .i-step:last-child { border-bottom: 1px solid var(--accent); }
+    .i-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .1em;
+      color: var(--sage);
+      padding-top: 5px;
+      will-change: transform;
+      transition: color .3s ease;
+    }
+    .i-step:hover .i-num { color: var(--parchment); }
+    .i-text { font-size: 17px; color: var(--text); line-height: 1.65; transition: transform .4s cubic-bezier(.22,1,.36,1); }
+    .i-step:hover .i-text { transform: translateX(6px); }
+    .i-text code {
+      font-family: 'Space Mono', monospace;
+      font-size: 12.5px;
+      color: var(--sage);
+      background: rgba(65,67,27,.3);
+      padding: 2px 8px;
+    }
+
+    /* Video preview popup */
+    .i-video-popup {
+      position: absolute;
+      right: -340px;
+      top: 50%;
+      transform: translateY(-50%) scale(0.85);
+      width: 300px;
+      background: var(--deep);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .4s cubic-bezier(.22,1,.36,1),
+                  transform .4s cubic-bezier(.22,1,.36,1);
+      z-index: 10;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .i-step:hover .i-video-popup {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+      pointer-events: auto;
+    }
+    .i-video-popup video {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: rgba(65,67,27,.15);
+    }
+    .i-video-label {
+      padding: 10px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .12em;
+      color: var(--sage);
+      text-transform: uppercase;
+      border-top: 1px solid var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .i-video-label::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sage);
+      animation: vid-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes vid-pulse {
+      0%, 100% { opacity: .4; }
+      50% { opacity: 1; }
+    }
+
+    /* Position popup on left for steps that would overflow */
+    .i-step.popup-left .i-video-popup {
+      right: auto;
+      left: -340px;
+    }
+
+    @media (max-width: 1100px) {
+      .i-video-popup {
+        right: auto;
+        left: 50%;
+        top: auto;
+        bottom: calc(100% + 12px);
+        transform: translateX(-50%) scale(0.85) translateY(8px);
+        width: 260px;
+      }
+      .i-step:hover .i-video-popup {
+        transform: translateX(-50%) scale(1) translateY(0);
+      }
+      .i-step.popup-left .i-video-popup {
+        left: 50%;
+        right: auto;
+      }
+    }
+    .install-cta { margin-top: 72px; }
+    .btn-lg {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: .04em;
+      color: var(--deep);
+      background: var(--sage);
+      padding: 20px 60px;
+      text-decoration: none;
+      display: inline-block;
+      transition: background .22s, transform .22s;
+    }
+    .btn-lg:hover { background: var(--stone); transform: translateY(-2px); }
+    .install-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-top: 24px;
+      opacity: .65;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      position: relative;
+      border-top: 1px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 52px 64px;
+      overflow: hidden;
+    }
+    .footer-bg-text {
+      position: absolute;
+      bottom: -40px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(60px, 12vw, 180px);
+      font-weight: 600;
+      color: var(--text);
+      opacity: 0.04;
+      pointer-events: none;
+      white-space: nowrap;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      will-change: transform;
+    }
+    .footer-tag {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--muted);
+      font-style: italic;
+      position: relative;
+      z-index: 1;
+    }
+    .footer-links { display: flex; gap: 36px; position: relative; z-index: 1; }
+    .footer-links a {
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      letter-spacing: .05em; transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ─── Reveal helpers ─── */
+    .fade-up { opacity: 0; transform: translateY(44px); }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 900px) {
+      #memory .section-wrap { grid-template-columns: 1fr; gap: 52px; }
+      .stats-grid { grid-template-columns: 1fr; gap: 20px; }
+    }
+    @media (max-width: 768px) {
+      #nav, #nav.scrolled { padding: 20px 24px; }
+      .section-wrap { padding: 100px 24px; }
+      .step { grid-template-columns: 1fr; gap: 24px; padding: 48px 0; }
+      .step:hover .step-content,
+      .step:nth-child(even):hover .step-content { transform: none; }
+      .step:nth-child(even) .step-content { order: 1; }
+      .step:nth-child(even) .step-visual  { order: 2; }
+      .feat-row { grid-template-columns: 60px 1fr; gap: 20px; }
+      .feat-body { grid-column: 1 / -1; }
+      footer { flex-direction: column; gap: 28px; padding: 40px 24px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+      .hero-inner { padding: 0 24px; }
+      .hero-headline { font-size: clamp(36px, 12vw, 56px); }
+      .hero-3d-hint { display: none; }
+      .code-block { font-size: 11px; padding: 28px; min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="scroll-progress"></div>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Navbar -->
+<nav id="nav">
+  <a href="#" class="nav-logo">DuperMemory</a>
+  <a href="#install" class="nav-cta">Download Extension</a>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════
+     HERO — Clean split layout: text left, 3D right
+     ════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <!-- 3D canvas fills the entire hero background -->
+  <div class="hero-3d">
+    <canvas id="hero-canvas"></canvas>
+    <p class="hero-3d-hint">Drag to rotate</p>
+  </div>
+  <!-- Text floats on top -->
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="hero-eyebrow" id="hero-eyebrow">Chrome Extension &nbsp;·&nbsp; Free &nbsp;·&nbsp; Manifest V3</p>
+      <h1 class="hero-headline" id="hero-headline" aria-label="One click. Five AIs. Zero copy-paste.">
+        <span class="hero-line" id="hl-0">One click.</span>
+        <span class="hero-line" id="hl-1">Five AIs.</span>
+        <span class="hero-line" id="hl-2">Zero copy-paste.</span>
+      </h1>
+      <p class="hero-sub" id="hero-sub">
+        DuperMemory bridges ChatGPT, Claude, Gemini, Perplexity &amp; DeepSeek —
+        carrying full context across every hop.
+      </p>
+      <div class="hero-actions" id="hero-actions">
+        <a href="#" class="btn-primary">Download Free — Chrome Extension</a>
+        <a href="#how" class="btn-link">See how it works ↓</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Marquee -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">ChatGPT</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Claude</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Gemini</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Perplexity</span><span class="marquee-item">·</span>
+    <span class="marquee-item">DeepSeek</span><span class="marquee-item">·</span>
+    <span class="marquee-item">ChatGPT</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Claude</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Gemini</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Perplexity</span><span class="marquee-item">·</span>
+    <span class="marquee-item">DeepSeek</span><span class="marquee-item">·</span>
+    <span class="marquee-item">ChatGPT</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Claude</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Gemini</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Perplexity</span><span class="marquee-item">·</span>
+    <span class="marquee-item">DeepSeek</span><span class="marquee-item">·</span>
+    <span class="marquee-item">ChatGPT</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Claude</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Gemini</span><span class="marquee-item">·</span>
+    <span class="marquee-item">Perplexity</span><span class="marquee-item">·</span>
+    <span class="marquee-item">DeepSeek</span><span class="marquee-item">·</span>
+  </div>
+</div>
+
+<!-- How It Works -->
+<section id="how">
+  <div class="section-wrap">
+    <span class="section-bg-num" id="bg-num-01">01</span>
+    <span class="label">How it works</span>
+    <h2 class="section-heading" id="heading-how">Three steps.<br>No friction.</h2>
+    <div class="steps">
+      <div class="step fade-up">
+        <div class="step-content">
+          <div class="step-num">Step 01</div>
+          <h3 class="step-title">You're mid-conversation on any AI</h3>
+          <p class="step-body">You've built up context on ChatGPT. The answer isn't quite right. One click on the DuperMemory button.</p>
+        </div>
+        <div class="step-visual"><span class="step-big-num">01</span></div>
+      </div>
+      <div class="step fade-up">
+        <div class="step-content">
+          <div class="step-num">Step 02</div>
+          <h3 class="step-title">DuperMemory captures everything</h3>
+          <p class="step-body">The full transcript is packaged into a structured context block — not a raw dump. Formatted, clean, ready.</p>
+        </div>
+        <div class="step-visual"><span class="step-big-num">02</span></div>
+      </div>
+      <div class="step fade-up">
+        <div class="step-content">
+          <div class="step-num">Step 03</div>
+          <h3 class="step-title">Another AI picks up where it left off</h3>
+          <p class="step-body">The context lands in Claude, Gemini, or whichever AI you chose. It reads the thread. It responds. Done.</p>
+        </div>
+        <div class="step-visual"><span class="step-big-num">03</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider">
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+</div>
+
+<!-- Stats -->
+<section class="stats-section">
+  <div class="section-wrap">
+    <div class="stats-grid">
+      <div class="stat-item fade-up">
+        <div class="stat-num" data-count="5">5</div>
+        <div class="stat-label">AIs Connected</div>
+      </div>
+      <div class="stat-item fade-up">
+        <div class="stat-num" data-count="1">1</div>
+        <div class="stat-label">Click to Switch</div>
+      </div>
+      <div class="stat-item fade-up">
+        <div class="stat-num" data-count="0">0</div>
+        <div class="stat-label">Copy-paste Required</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider">
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+</div>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-wrap">
+    <span class="section-bg-num" id="bg-num-02">02</span>
+    <span class="label">What it does</span>
+    <h2 class="section-heading" id="heading-features">Everything you need.<br>Nothing you don't.</h2>
+    <div class="features-list">
+      <div class="feat-row">
+        <span class="feat-num">01</span>
+        <h3 class="feat-title">Persistent Memory</h3>
+        <p class="feat-body">Decisions, entities, open questions carry across every AI hop. Nothing gets lost in the handoff.</p>
+      </div>
+      <div class="feat-row">
+        <span class="feat-num">02</span>
+        <h3 class="feat-title">Five AI Bridges</h3>
+        <p class="feat-body">ChatGPT, Claude, Gemini, Perplexity, DeepSeek. One extension to connect them all seamlessly.</p>
+      </div>
+      <div class="feat-row">
+        <span class="feat-num">03</span>
+        <h3 class="feat-title">Zero API Keys</h3>
+        <p class="feat-body">No backend. No config. Drives AI interfaces directly. Install and go — nothing to set up.</p>
+      </div>
+      <div class="feat-row">
+        <span class="feat-num">04</span>
+        <h3 class="feat-title">Right-click Anywhere</h3>
+        <p class="feat-body">Select text on any AI page, right-click, and send to another model instantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider">
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+</div>
+
+<!-- Memory System -->
+<div id="memory">
+  <div class="memory-bg-text" id="memory-bg-text">MEMORY</div>
+  <div class="section-wrap">
+    <div class="mem-left">
+      <span class="label">The memory system</span>
+      <h2 class="section-heading mem-heading" id="heading-memory">Your AIs finally have a shared memory.</h2>
+      <p class="mem-body">
+        DuperMemory parses a structured memory block from every AI response —
+        topics, entities, decisions, open questions. It merges these across hops
+        and passes them forward. Your context survives every jump.
+      </p>
+    </div>
+    <div class="code-block" id="code-block">---MEMORY---
+Topic:    Cross-AI comparison of diffusion models
+Goal:     Find the best approach for low-resource fine-tuning
+
+Facts:
+  - LoRA outperforms full fine-tune at &lt; 1B params
+  - DeepSeek R1 showed strongest reasoning on step 4
+  - Claude gave the clearest explanation of gradient flow
+
+Entities: LoRA, QLoRA, DeepSeek R1, Claude 3.5, GPT-4o
+
+Open:     Which scheduler works best with LoRA on Flux?
+---END MEMORY---</div>
+  </div>
+</div>
+
+<div class="section-divider">
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+  <span class="div-line"></span>
+</div>
+
+<!-- Install -->
+<section id="install">
+  <div class="section-wrap">
+    <span class="section-bg-num" id="bg-num-04">04</span>
+    <span class="label">Installation</span>
+    <h2 class="section-heading" id="heading-install">Get it in 60 seconds.</h2>
+    <p class="install-sub">Not on the Chrome Web Store yet — here's how to install manually:</p>
+    <div class="install-steps">
+      <div class="i-step fade-up">
+        <span class="i-num" data-idx="0">01</span>
+        <p class="i-text">Download the <code>.zip</code> file from the button below</p>
+        <div class="i-video-popup">
+          <video src="" muted playsinline preload="none"></video>
+          <div class="i-video-label">Step 01 — Download</div>
+        </div>
+      </div>
+      <div class="i-step fade-up">
+        <span class="i-num" data-idx="1">02</span>
+        <p class="i-text">Go to <code>chrome://extensions</code> in your browser</p>
+        <div class="i-video-popup">
+          <video src="" muted playsinline preload="none"></video>
+          <div class="i-video-label">Step 02 — Extensions</div>
+        </div>
+      </div>
+      <div class="i-step fade-up">
+        <span class="i-num" data-idx="2">03</span>
+        <p class="i-text">Enable <code>Developer Mode</code> — toggle in the top right corner</p>
+        <div class="i-video-popup">
+          <video src="" muted playsinline preload="none"></video>
+          <div class="i-video-label">Step 03 — Developer Mode</div>
+        </div>
+      </div>
+      <div class="i-step fade-up">
+        <span class="i-num" data-idx="3">04</span>
+        <p class="i-text">Click <code>Load unpacked</code> and select the unzipped folder</p>
+        <div class="i-video-popup">
+          <video src="" muted playsinline preload="none"></video>
+          <div class="i-video-label">Step 04 — Load Extension</div>
+        </div>
+      </div>
+    </div>
+    <div class="install-cta">
+      <a href="#" class="btn-lg">Download Extension (.zip)</a>
+      <p class="install-meta">Works on Chrome &nbsp;·&nbsp; Manifest V3 &nbsp;·&nbsp; No account needed</p>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-bg-text" id="footer-bg-text">DUPERMEMORY</div>
+  <p class="footer-tag">DuperMemory — Built for people who think across AIs.</p>
+  <nav class="footer-links">
+    <a href="#">GitHub</a>
+    <a href="#install">Download</a>
+    <a href="#" onclick="if(window.__lenis){window.__lenis.scrollTo(0)}else{window.scrollTo({top:0,behavior:'smooth'})};return false;">Back to top ↑</a>
+  </nav>
+</footer>
+
+<!-- Scripts: Lenis → Three.js → GSAP → ScrollTrigger → inline -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── Guards ── */
+  if (typeof gsap === 'undefined') { console.error('GSAP missing'); return; }
+  if (typeof ScrollTrigger === 'undefined') { console.error('ScrollTrigger missing'); return; }
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ══════════════════════════════════════════════════════════
+     LENIS — Smooth scrolling engine
+     Everything flows through: Lenis → GSAP ticker → ScrollTrigger
+     No native scroll listeners — one unified pipeline.
+  ══════════════════════════════════════════════════════════ */
+  var lenis = null;
+  try {
+    if (typeof Lenis !== 'undefined') {
+      lenis = new Lenis({
+        duration: 1.4,
+        easing: function(t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+        smoothWheel: true,
+        wheelMultiplier: 0.8,
+        touchMultiplier: 1.5
+      });
+
+      lenis.on('scroll', ScrollTrigger.update);
+
+      gsap.ticker.add(function(time) {
+        lenis.raf(time * 1000);
+      });
+      gsap.ticker.lagSmoothing(0);
+
+      window.__lenis = lenis;
+    }
+  } catch(e) { console.warn('Lenis init:', e); }
+
+  /* ── Custom cursor ── */
+  try {
+    var cursor = document.getElementById('cursor');
+    var ring   = document.getElementById('cursor-ring');
+    if (cursor && ring) {
+      var cx = gsap.quickTo(cursor, 'x', { duration: 0.12, ease: 'none' });
+      var cy = gsap.quickTo(cursor, 'y', { duration: 0.12, ease: 'none' });
+      var rx = gsap.quickTo(ring,   'x', { duration: 0.45, ease: 'power3.out' });
+      var ry = gsap.quickTo(ring,   'y', { duration: 0.45, ease: 'power3.out' });
+      window.addEventListener('mousemove', function(e) {
+        cx(e.clientX); cy(e.clientY);
+        rx(e.clientX); ry(e.clientY);
+      });
+    }
+  } catch(e) { console.warn('Cursor:', e); }
+
+  /* ── Scroll progress (driven by ScrollTrigger, not native scroll) ── */
+  try {
+    var progressBar = document.getElementById('scroll-progress');
+    if (progressBar) {
+      gsap.to(progressBar, {
+        width: '100%',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: document.documentElement,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.3
+        }
+      });
+    }
+  } catch(e) { console.warn('Progress:', e); }
+
+  /* ── Navbar (driven by Lenis scroll callback) ── */
+  try {
+    var nav = document.getElementById('nav');
+    if (nav) {
+      var prevY = 0;
+      var onScroll = function() {
+        var y = window.scrollY;
+        nav.classList.toggle('scrolled', y > 60);
+        if (y > prevY + 8 && y > 200) {
+          gsap.to(nav, { yPercent: -110, duration: 0.3, ease: 'power2.in', overwrite: true });
+        } else if (y < prevY - 8) {
+          gsap.to(nav, { yPercent: 0, duration: 0.35, ease: 'power2.out', overwrite: true });
+        }
+        prevY = y;
+      };
+      if (lenis) {
+        lenis.on('scroll', onScroll);
+      } else {
+        window.addEventListener('scroll', onScroll, { passive: true });
+      }
+    }
+  } catch(e) { console.warn('Navbar:', e); }
+
+  /* Hero: no parallax on text — kept static */
+
+  /* ══════════════════════════════════════════════════════════
+     THREE.JS — Interactive 3D network with OrbitControls
+     Drag to rotate, scroll to zoom, auto-rotates when idle.
+  ══════════════════════════════════════════════════════════ */
+  try {
+    if (typeof THREE !== 'undefined') {
+      var canvas = document.getElementById('hero-canvas');
+      var hero3d = document.querySelector('.hero-3d');
+      if (canvas && hero3d) {
+        var canvasW = function() { return window.innerWidth; };
+        var canvasH = function() { return window.innerHeight; };
+
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(canvasW(), canvasH());
+        renderer.setClearColor(0x000000, 0);
+
+        var scene  = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, canvasW() / canvasH(), 0.1, 100);
+        camera.position.set(0, 0.5, 8);
+
+        /* OrbitControls — drag to rotate, scroll to zoom */
+        var controls = new THREE.OrbitControls(camera, canvas);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.enablePan = false;
+        controls.enableZoom = false;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
+
+        /* Hide hint after first interaction */
+        var hint = document.querySelector('.hero-3d-hint');
+        if (hint) {
+          canvas.addEventListener('pointerdown', function() {
+            gsap.to(hint, { opacity: 0, duration: 0.4 });
+          }, { once: true });
+        }
+
+        /* Lights */
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+        var keyLight = new THREE.DirectionalLight(0xF8F3E1, 0.7);
+        keyLight.position.set(5, 5, 5);
+        scene.add(keyLight);
+        var rimLight = new THREE.DirectionalLight(0xAEB784, 0.3);
+        rimLight.position.set(-4, -2, -3);
+        scene.add(rimLight);
+
+        /* ── Central hub: dodecahedron ── */
+        var hubGeo = new THREE.DodecahedronGeometry(0.6, 0);
+        var hubMat = new THREE.MeshStandardMaterial({
+          color: 0xF8F3E1, wireframe: true, emissive: 0xAEB784, emissiveIntensity: 0.3
+        });
+        var hubMesh = new THREE.Mesh(hubGeo, hubMat);
+        scene.add(hubMesh);
+
+        /* Inner glow sphere */
+        var glowGeo = new THREE.SphereGeometry(0.35, 16, 16);
+        var glowMat = new THREE.MeshBasicMaterial({
+          color: 0xAEB784, transparent: true, opacity: 0.15
+        });
+        var glowMesh = new THREE.Mesh(glowGeo, glowMat);
+        scene.add(glowMesh);
+
+        /* ── 5 Nodes: icosahedrons representing each AI ── */
+        var nodeData = [
+          { color: 0x7EC89B, name: 'ChatGPT' },
+          { color: 0xD4A574, name: 'Claude' },
+          { color: 0x8AACC8, name: 'Gemini' },
+          { color: 0x7EBBA8, name: 'Perplexity' },
+          { color: 0x9B9BC8, name: 'DeepSeek' }
+        ];
+        var nodeRadius = 2.8;
+        var nodes = [];
+
+        for (var ni = 0; ni < 5; ni++) {
+          var angle = (ni / 5) * Math.PI * 2 - Math.PI / 2;
+          var nx = Math.cos(angle) * nodeRadius;
+          var ny = Math.sin(angle) * nodeRadius * 0.7;
+          var nz = (Math.random() - 0.5) * 1.2;
+
+          /* Outer wireframe shell */
+          var shellGeo = new THREE.IcosahedronGeometry(0.38, 1);
+          var shellMat = new THREE.MeshStandardMaterial({
+            color: nodeData[ni].color,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.6
+          });
+          var shellMesh = new THREE.Mesh(shellGeo, shellMat);
+          shellMesh.position.set(nx, ny, nz);
+          scene.add(shellMesh);
+
+          /* Inner solid core */
+          var coreGeo = new THREE.IcosahedronGeometry(0.18, 1);
+          var coreMat = new THREE.MeshStandardMaterial({
+            color: nodeData[ni].color,
+            emissive: nodeData[ni].color,
+            emissiveIntensity: 0.6,
+            roughness: 0.2,
+            metalness: 0.1
+          });
+          var coreMesh = new THREE.Mesh(coreGeo, coreMat);
+          coreMesh.position.set(nx, ny, nz);
+          scene.add(coreMesh);
+
+          nodes.push({
+            shell: shellMesh,
+            core: coreMesh,
+            baseX: nx,
+            baseY: ny,
+            baseZ: nz,
+            rotSpeed: 0.3 + Math.random() * 0.5,
+            orbitSpeed: 0.06 + ni * 0.012,
+            orbitPhase: angle
+          });
+        }
+
+        /* ── Edges: curved tubes between all node pairs ── */
+        var edges = [];
+        for (var ea = 0; ea < 5; ea++) {
+          for (var eb = ea + 1; eb < 5; eb++) {
+            var eGeo = new THREE.BufferGeometry();
+            eGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+            var eMat = new THREE.LineBasicMaterial({
+              color: 0x41431B, transparent: true, opacity: 0.2
+            });
+            var eLine = new THREE.Line(eGeo, eMat);
+            scene.add(eLine);
+            edges.push({ line: eLine, geo: eGeo, a: ea, b: eb });
+          }
+        }
+
+        /* ── Hub-to-node lines ── */
+        var hubLines = [];
+        for (var hi = 0; hi < 5; hi++) {
+          var hGeo = new THREE.BufferGeometry();
+          hGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+          var hMat = new THREE.LineBasicMaterial({
+            color: nodeData[hi].color, transparent: true, opacity: 0.15
+          });
+          var hLine = new THREE.Line(hGeo, hMat);
+          scene.add(hLine);
+          hubLines.push({ line: hLine, geo: hGeo, mat: hMat });
+        }
+
+        /* ── Floating particles around the structure ── */
+        var particleCount = 40;
+        var pGeo = new THREE.BufferGeometry();
+        var pPositions = new Float32Array(particleCount * 3);
+        var pVelocities = [];
+        for (var pi = 0; pi < particleCount; pi++) {
+          pPositions[pi*3]   = (Math.random() - 0.5) * 8;
+          pPositions[pi*3+1] = (Math.random() - 0.5) * 6;
+          pPositions[pi*3+2] = (Math.random() - 0.5) * 4;
+          pVelocities.push({
+            x: (Math.random() - 0.5) * 0.005,
+            y: (Math.random() - 0.5) * 0.005,
+            z: (Math.random() - 0.5) * 0.003
+          });
+        }
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+        var pMat = new THREE.PointsMaterial({
+          color: 0xAEB784, size: 0.04, transparent: true, opacity: 0.5
+        });
+        var particles = new THREE.Points(pGeo, pMat);
+        scene.add(particles);
+
+        /* ── Animation loop ── */
+        var t = 0;
+        var clock = new THREE.Clock();
+        var heroVisible = true;
+
+        var heroSection = document.getElementById('hero');
+        if (window.IntersectionObserver && heroSection) {
+          var obs = new IntersectionObserver(function(entries) {
+            heroVisible = entries[0].isIntersecting;
+          }, { threshold: 0.05 });
+          obs.observe(heroSection);
+        }
+
+        function tick3D() {
+          requestAnimationFrame(tick3D);
+          if (!heroVisible) return;
+
+          var dt = clock.getDelta();
+          t += dt;
+
+          controls.update();
+
+          /* Hub breathes */
+          hubMesh.rotation.x += dt * 0.12;
+          hubMesh.rotation.y += dt * 0.18;
+          var breathe = 1 + Math.sin(t * 0.8) * 0.05;
+          hubMesh.scale.setScalar(breathe);
+          glowMesh.scale.setScalar(breathe * 0.9);
+          glowMat.opacity = 0.1 + Math.sin(t * 1.2) * 0.05;
+
+          /* Update nodes */
+          nodes.forEach(function(n) {
+            var oAngle = t * n.orbitSpeed + n.orbitPhase;
+            var px = n.baseX + Math.sin(oAngle) * 0.25;
+            var py = n.baseY + Math.cos(oAngle * 0.7) * 0.18;
+            var pz = n.baseZ + Math.sin(oAngle * 0.5) * 0.15;
+            n.shell.position.set(px, py, pz);
+            n.core.position.set(px, py, pz);
+            n.shell.rotation.x += dt * n.rotSpeed * 0.3;
+            n.shell.rotation.y += dt * n.rotSpeed * 0.5;
+            n.core.rotation.x -= dt * n.rotSpeed * 0.2;
+            n.core.rotation.y -= dt * n.rotSpeed * 0.3;
+          });
+
+          /* Update edges */
+          edges.forEach(function(edge) {
+            var pA = nodes[edge.a].core.position;
+            var pB = nodes[edge.b].core.position;
+            var posArr = edge.geo.attributes.position;
+            posArr.array.set([pA.x, pA.y, pA.z, pB.x, pB.y, pB.z]);
+            posArr.needsUpdate = true;
+          });
+
+          /* Hub-to-node lines with pulsing */
+          hubLines.forEach(function(hl, i) {
+            var nPos = nodes[i].core.position;
+            var posArr = hl.geo.attributes.position;
+            posArr.array.set([0, 0, 0, nPos.x, nPos.y, nPos.z]);
+            posArr.needsUpdate = true;
+            hl.mat.opacity = 0.1 + Math.sin(t * 1.0 + i * 1.3) * 0.08;
+          });
+
+          /* Particles drift */
+          var pArr = particles.geometry.attributes.position.array;
+          for (var pi = 0; pi < particleCount; pi++) {
+            pArr[pi*3]   += pVelocities[pi].x;
+            pArr[pi*3+1] += pVelocities[pi].y;
+            pArr[pi*3+2] += pVelocities[pi].z;
+            if (Math.abs(pArr[pi*3]) > 4) pVelocities[pi].x *= -1;
+            if (Math.abs(pArr[pi*3+1]) > 3) pVelocities[pi].y *= -1;
+            if (Math.abs(pArr[pi*3+2]) > 2) pVelocities[pi].z *= -1;
+          }
+          particles.geometry.attributes.position.needsUpdate = true;
+
+          renderer.render(scene, camera);
+        }
+
+        tick3D();
+
+        /* Resize handler */
+        window.addEventListener('resize', function() {
+          var w = canvasW(), h = canvasH();
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        });
+      }
+    }
+  } catch(e) { console.warn('Three.js error:', e); }
+
+  /* ══════════════════════════════════════════════════════════
+     HERO ENTRANCE ANIMATION
+  ══════════════════════════════════════════════════════════ */
+  try {
+    ['hl-0','hl-1','hl-2'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = el.textContent.split('').map(function(ch) {
+        return '<span class="h-char">' + (ch === ' ' ? '&nbsp;' : ch) + '</span>';
+      }).join('');
+    });
+
+    var eyebrow = document.getElementById('hero-eyebrow');
+    var heroSub = document.getElementById('hero-sub');
+    var heroActions = document.getElementById('hero-actions');
+    var hero3dEl = document.querySelector('.hero-3d');
+    var hChars = document.querySelectorAll('.h-char');
+
+    gsap.set(eyebrow, { opacity: 0 });
+    gsap.set(heroSub, { opacity: 0, y: 20 });
+    gsap.set(heroActions, { opacity: 0, y: 16 });
+    gsap.set(hChars, { y: '110%' });
+    if (hero3dEl) gsap.set(hero3dEl, { opacity: 0, scale: 0.9 });
+
+    var tl = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.3 });
+    tl.to(eyebrow, { opacity: 1, duration: 0.9 });
+    tl.to(hChars, { y: '0%', duration: 0.9, stagger: 0.022 }, '-=0.5');
+    tl.to(heroSub, { opacity: 1, y: 0, duration: 0.8 }, '-=0.5');
+    tl.to(heroActions, { opacity: 1, y: 0, duration: 0.8 }, '-=0.5');
+    if (hero3dEl) tl.to(hero3dEl, { opacity: 1, scale: 1, duration: 1.2, ease: 'power2.out' }, '-=0.8');
+  } catch(e) { console.warn('Hero entrance:', e); }
+
+  /* ══════════════════════════════════════════════════════════
+     SECTION PARALLAX — decorative elements only, no text.
+     Parallax on: divider lines, background numbers, big step nums,
+     memory bg text, footer bg text, step borders (via pseudo).
+  ══════════════════════════════════════════════════════════ */
+  var isMobile = window.innerWidth <= 768;
+
+  if (!isMobile) {
+    try {
+      var scrubVal = 0.6;
+
+      /* ── DIVIDER LINES — 3 lines per divider at different speeds ── */
+      document.querySelectorAll('.section-divider').forEach(function(divider) {
+        var lines = divider.querySelectorAll('.div-line');
+        if (lines.length >= 3) {
+          /* Main line: moderate horizontal slide */
+          gsap.fromTo(lines[0], { xPercent: -15 }, { xPercent: 15, ease: 'none',
+            scrollTrigger: { trigger: divider, start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+          });
+          /* Second line: opposite direction, faster */
+          gsap.fromTo(lines[1], { xPercent: 25 }, { xPercent: -25, ease: 'none',
+            scrollTrigger: { trigger: divider, start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+          });
+          /* Third line: subtle vertical drift */
+          gsap.fromTo(lines[2], { xPercent: -10, y: 10 }, { xPercent: 10, y: -10, ease: 'none',
+            scrollTrigger: { trigger: divider, start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+          });
+        }
+      });
+
+      /* ── BIG DECORATIVE STEP NUMBERS — drift up faster than content ── */
+      document.querySelectorAll('.step-big-num').forEach(function(el) {
+        var parent = el.closest('.step');
+        if (!parent) return;
+        gsap.to(el, { y: -100, ease: 'none',
+          scrollTrigger: { trigger: parent, start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+        });
+      });
+
+      /* ── SECTION BACKGROUND NUMBERS (01, 02, etc) — slow drift ── */
+      document.querySelectorAll('.section-bg-num').forEach(function(el) {
+        var parent = el.closest('section') || el.closest('[id]') || el.parentElement;
+        if (!parent) return;
+        gsap.to(el, { y: -90, ease: 'none',
+          scrollTrigger: { trigger: parent, start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+        });
+      });
+
+      /* ── STEP BORDER LINES — horizontal offset on step borders ── */
+      document.querySelectorAll('.step').forEach(function(step, idx) {
+        gsap.fromTo(step,
+          { borderTopColor: 'rgba(65,67,27,0)' },
+          { borderTopColor: 'rgba(65,67,27,1)', ease: 'none',
+            scrollTrigger: { trigger: step, start: 'top 90%', end: 'top 60%', scrub: scrubVal }
+          }
+        );
+      });
+
+      /* ── STEP HOVER — magnetic cursor-follow on big numbers ── */
+      document.querySelectorAll('.step').forEach(function(step) {
+        var bigNum = step.querySelector('.step-big-num');
+        if (!bigNum) return;
+
+        step.addEventListener('mousemove', function(e) {
+          var rect = step.getBoundingClientRect();
+          var cx = (e.clientX - rect.left) / rect.width - 0.5;   // -0.5 to 0.5
+          var cy = (e.clientY - rect.top) / rect.height - 0.5;
+          gsap.to(bigNum, {
+            x: cx * 40,
+            y: cy * 30,
+            rotation: cx * 4,
+            duration: 0.5,
+            ease: 'power2.out',
+            overwrite: 'auto'
+          });
+        });
+
+        step.addEventListener('mouseleave', function() {
+          gsap.to(bigNum, {
+            x: 0, y: 0, rotation: 0,
+            duration: 0.7,
+            ease: 'elastic.out(1, 0.4)',
+            overwrite: 'auto'
+          });
+        });
+      });
+
+      /* ── MEMORY SECTION — bg text drifts, code block lags ── */
+      if (document.getElementById('memory-bg-text')) {
+        gsap.to('#memory-bg-text', { yPercent: -12, ease: 'none',
+          scrollTrigger: { trigger: '#memory', start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+        });
+      }
+
+      /* ── INSTALL — step numbers cascade sideways ── */
+      document.querySelectorAll('.i-num').forEach(function(el) {
+        var idx = parseInt(el.getAttribute('data-idx') || '0', 10);
+        gsap.to(el, { x: 8 + idx * 14, ease: 'none',
+          scrollTrigger: { trigger: '#install', start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+        });
+      });
+
+      /* ── FOOTER — bg text rises into view ── */
+      if (document.getElementById('footer-bg-text')) {
+        gsap.fromTo('#footer-bg-text', { y: 80 }, { y: -20, ease: 'none',
+          scrollTrigger: { trigger: 'footer', start: 'top bottom', end: 'bottom bottom', scrub: scrubVal }
+        });
+      }
+
+      /* ── MARQUEE — subtle vertical shift as it scrolls through ── */
+      var marquee = document.querySelector('.marquee-wrap');
+      if (marquee) {
+        gsap.fromTo(marquee, { y: 20 }, { y: -20, ease: 'none',
+          scrollTrigger: { trigger: marquee, start: 'top bottom', end: 'bottom top', scrub: scrubVal }
+        });
+      }
+
+    } catch(e) { console.warn('Section parallax:', e); }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     ENTRANCE ANIMATIONS (all sections below hero)
+  ══════════════════════════════════════════════════════════ */
+
+  /* Section headings clip-path wipe */
+  try {
+    document.querySelectorAll('.section-heading').forEach(function(el) {
+      gsap.fromTo(el,
+        { clipPath: 'inset(0 100% 0 0)' },
+        { clipPath: 'inset(0 0% 0 0)', duration: 1.2, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%' } }
+      );
+    });
+  } catch(e) { console.warn('Clip reveal:', e); }
+
+  /* Fade-up elements */
+  try {
+    document.querySelectorAll('.fade-up').forEach(function(el, i) {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 85%',
+        onEnter: function() {
+          gsap.to(el, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', delay: (i % 4) * 0.09 });
+        }
+      });
+    });
+  } catch(e) { console.warn('Fade-up:', e); }
+
+  /* Stat hover — 3D tilt on mouse move */
+  try {
+    document.querySelectorAll('.stat-item').forEach(function(item) {
+      item.addEventListener('mousemove', function(e) {
+        var rect = item.getBoundingClientRect();
+        var cx = (e.clientX - rect.left) / rect.width - 0.5;
+        var cy = (e.clientY - rect.top) / rect.height - 0.5;
+        gsap.to(item, {
+          rotateY: cx * 15,
+          rotateX: -cy * 12,
+          duration: 0.4,
+          ease: 'power2.out',
+          overwrite: 'auto'
+        });
+      });
+      item.addEventListener('mouseleave', function() {
+        gsap.to(item, {
+          rotateY: 0, rotateX: 0,
+          duration: 0.7,
+          ease: 'elastic.out(1, 0.5)',
+          overwrite: 'auto'
+        });
+      });
+    });
+  } catch(e) { console.warn('Stat tilt:', e); }
+
+  /* Counter animation */
+  try {
+    document.querySelectorAll('.stat-num').forEach(function(el) {
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      if (isNaN(target)) return;
+      var obj = { val: target === 0 ? 9 : 0 };
+      ScrollTrigger.create({
+        trigger: el, start: 'top 85%', once: true,
+        onEnter: function() {
+          gsap.to(obj, {
+            val: target, duration: target === 0 ? 1.6 : 1.8, ease: 'power2.out',
+            onUpdate: function() { el.textContent = Math.round(obj.val); }
+          });
+        }
+      });
+    });
+  } catch(e) { console.warn('Counter:', e); }
+
+  /* Code block typewriter — uses clip-path reveal so layout never shifts */
+  try {
+    (function() {
+      var codeEl = document.getElementById('code-block');
+      if (!codeEl) return;
+      /* Text stays in DOM at full size. We reveal via clip-path from top. */
+      gsap.set(codeEl, { clipPath: 'inset(0 0 100% 0)' });
+      ScrollTrigger.create({
+        trigger: codeEl, start: 'top 82%', once: true,
+        onEnter: function() {
+          gsap.to(codeEl, {
+            clipPath: 'inset(0 0 0% 0)',
+            duration: 2.2,
+            ease: 'power2.out'
+          });
+        }
+      });
+    })();
+  } catch(e) { console.warn('Typewriter:', e); }
+
+  /* Feature rows — staggered child reveals + border draw */
+  try {
+    document.querySelectorAll('.feat-row').forEach(function(row, i) {
+      var num = row.querySelector('.feat-num');
+      var title = row.querySelector('.feat-title');
+      var body = row.querySelector('.feat-body');
+
+      /* Start hidden */
+      gsap.set(row, { opacity: 0 });
+      if (num) gsap.set(num, { opacity: 0, x: -20 });
+      if (title) gsap.set(title, { opacity: 0, y: 30, clipPath: 'inset(0 0 100% 0)' });
+      if (body) gsap.set(body, { opacity: 0, y: 20 });
+
+      ScrollTrigger.create({
+        trigger: row,
+        start: 'top 85%',
+        once: true,
+        onEnter: function() {
+          var tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+          /* Row fades in */
+          tl.to(row, { opacity: 1, duration: 0.01 });
+
+          /* Add .is-visible to trigger the CSS border draw */
+          row.classList.add('is-visible');
+
+          /* Number slides in from left */
+          if (num) tl.to(num, { opacity: 1, x: 0, duration: 0.6 }, 0.1);
+
+          /* Title clips up + fades */
+          if (title) tl.to(title, { opacity: 1, y: 0, clipPath: 'inset(0 0 0% 0)', duration: 0.7 }, 0.2);
+
+          /* Body fades up */
+          if (body) tl.to(body, { opacity: 1, y: 0, duration: 0.6 }, 0.35);
+        }
+      });
+    });
+  } catch(e) { console.warn('Feat rows:', e); }
+
+  /* Install steps */
+  try {
+    document.querySelectorAll('.i-step').forEach(function(el, i) {
+      gsap.fromTo(el,
+        { opacity: 0, y: 28 },
+        { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out', delay: i * 0.11,
+          scrollTrigger: { trigger: el, start: 'top 87%' } }
+      );
+
+      /* Video popup — auto-play on hover, pause+reset on leave */
+      var video = el.querySelector('.i-video-popup video');
+      if (!video) return;
+      el.addEventListener('mouseenter', function() {
+        if (video.src || video.getAttribute('src')) {
+          video.currentTime = 0;
+          video.play().catch(function() {});
+        }
+      });
+      el.addEventListener('mouseleave', function() {
+        video.pause();
+        video.currentTime = 0;
+      });
+    });
+  } catch(e) { console.warn('Install steps:', e); }
+
+  /* Label fade-ins */
+  try {
+    document.querySelectorAll('.label').forEach(function(el) {
+      gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.8, ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 88%' } });
+    });
+  } catch(e) { console.warn('Labels:', e); }
+
+})();
+</script>
+</body>
+</html>
