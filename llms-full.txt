@@ -1,0 +1,191 @@
+# DuperMemory — Complete Documentation
+
+> DuperMemory is a free Chrome extension (Manifest V3) that enables one-click conversation context transfer between five major AI chat platforms: ChatGPT, Claude, Gemini, Perplexity, and DeepSeek. It eliminates the need to copy-paste conversation history when switching between AI assistants.
+
+## Product Overview
+
+DuperMemory addresses a fundamental friction in multi-AI workflows. Knowledge workers, developers, researchers, and students increasingly use multiple AI assistants to get the best results — each AI has different strengths. However, switching between them means losing all conversation context, forcing users to manually copy, reformat, and re-explain their entire thread.
+
+DuperMemory solves this with a single browser extension button. One click captures the full conversation, structures it into a clean context block, and transfers it to any of the five supported AI platforms. The receiving AI picks up exactly where the previous one left off.
+
+### Problem Statement
+
+- Users are locked into single AI conversations even when another AI might give better answers
+- Manually copying conversation threads is tedious and loses formatting
+- Re-explaining context to a new AI wastes time and produces worse results
+- There is no standardized way to port conversation context between AI platforms
+
+### Solution
+
+DuperMemory acts as a universal bridge between AI chat interfaces. It:
+
+1. Captures the complete conversation transcript from the current AI
+2. Structures and formats the transcript into a clean, parseable context block
+3. Injects the formatted context into the target AI's chat interface
+4. The target AI reads the full thread and responds with complete context awareness
+
+## Technical Specifications
+
+- **Extension Type**: Chrome Browser Extension
+- **Manifest Version**: Manifest V3 (Chrome's latest extension standard)
+- **Permissions**: Minimal — only accesses supported AI chat domains
+- **Data Privacy**: Fully client-side. No data is sent to external servers. No analytics. No tracking.
+- **Storage**: No persistent storage required. Context is transferred in real-time.
+- **Size**: Lightweight (~41 KB zipped)
+- **Dependencies**: None — pure JavaScript, no external libraries
+- **Compatibility**: Google Chrome (latest versions)
+
+## Supported AI Platforms
+
+### ChatGPT (OpenAI)
+- URL: https://chat.openai.com
+- Full conversation capture including system messages, user prompts, and assistant responses
+- Supports all ChatGPT models (GPT-4, GPT-4o, etc.)
+
+### Claude (Anthropic)
+- URL: https://claude.ai
+- Captures full conversation threads including artifacts
+- Supports all Claude models (Opus, Sonnet, Haiku)
+
+### Gemini (Google)
+- URL: https://gemini.google.com
+- Full conversation capture from Google's AI interface
+- Supports all Gemini model variants
+
+### Perplexity AI
+- URL: https://perplexity.ai
+- Captures conversation threads including search-augmented responses
+- Preserves source citations in context transfer
+
+### DeepSeek
+- URL: https://chat.deepseek.com
+- Full conversation capture from DeepSeek's chat interface
+- Supports DeepSeek's reasoning and standard modes
+
+## How It Works — Detailed Flow
+
+### Step 1: Capture
+You are in the middle of a conversation on any of the five supported AI platforms. Perhaps ChatGPT gave you a partial answer, or you want Claude's perspective on the same problem. You click the DuperMemory extension icon in your Chrome toolbar.
+
+### Step 2: Package
+DuperMemory reads the full conversation from the current page's DOM. It does not screenshot or use APIs — it directly extracts the structured conversation data. The transcript is then formatted into a clean context block that preserves:
+- The order of all messages
+- Who said what (user vs. AI)
+- Code blocks and formatting
+- The conversational flow and reasoning chain
+
+This is not a raw text dump. The output is structured, readable, and optimized for another AI to understand.
+
+### Step 3: Transfer
+You select your target AI platform from the DuperMemory interface. The extension opens (or navigates to) the target AI and injects the formatted context into the chat input. The target AI receives the full conversation history and can respond as if it had been part of the original conversation.
+
+The entire process takes approximately 2-3 seconds.
+
+## Use Cases
+
+### For Developers
+- Start debugging with ChatGPT, get a second opinion from Claude
+- Use Perplexity for research, then have Gemini synthesize the findings
+- Compare code solutions across multiple AIs without re-explaining the problem
+
+### For Researchers
+- Cross-validate AI responses across different models
+- Use each AI's strengths (Perplexity for search, Claude for analysis, ChatGPT for synthesis)
+- Build on previous conversation context without starting over
+
+### For Students
+- Get explanations from multiple AI tutors
+- Compare teaching approaches across platforms
+- Continue study sessions across different AIs
+
+### For Writers
+- Draft with one AI, refine with another
+- Get diverse creative perspectives without context loss
+- Use specialized AIs for different aspects of writing (research, drafting, editing)
+
+### For Business Professionals
+- Start analysis in one AI, validate conclusions in another
+- Use multiple AIs for comprehensive market research
+- Get diverse strategic perspectives on the same business problem
+
+## Installation Guide
+
+### Prerequisites
+- Google Chrome browser (latest version recommended)
+- No account or sign-up required
+
+### Step-by-Step Installation
+
+1. **Download**: Go to https://github.com/Tusharkaushik1106/dupermemory/releases/tag/First and download the `dupermemory.zip` file (41.1 KB)
+
+2. **Extract**: Unzip the downloaded file to a folder on your computer
+
+3. **Open Chrome Extensions**: Navigate to `chrome://extensions` in your Chrome browser's address bar
+
+4. **Enable Developer Mode**: Toggle the "Developer Mode" switch in the top-right corner of the extensions page
+
+5. **Load Extension**: Click the "Load unpacked" button that appears after enabling Developer Mode
+
+6. **Select Folder**: Navigate to and select the unzipped DuperMemory folder
+
+7. **Verify**: The DuperMemory extension icon should now appear in your Chrome toolbar. You may need to click the puzzle piece icon and pin it.
+
+### Post-Installation
+- No configuration required
+- No account creation needed
+- Extension activates only when you click it — no background processes
+- Works immediately on any of the five supported AI platforms
+
+## Product Information
+
+- **Name**: DuperMemory
+- **Tagline**: One click. Five AIs. Zero copy-paste.
+- **Category**: AI Productivity Tool / Browser Extension
+- **Price**: Free (open source)
+- **Creator**: Tushar Kaushik
+- **Repository**: https://github.com/Tusharkaushik1106/dupermemory
+- **Release**: https://github.com/Tusharkaushik1106/dupermemory/releases/tag/First
+- **Landing Page**: https://dupermemory.com
+- **License**: Open source
+- **Status**: Pre-release / Beta
+
+## Key Differentiators
+
+1. **Privacy-first**: Zero data leaves your browser. No servers, no APIs, no tracking.
+2. **Universal**: Works across 5 major AI platforms, not just one pair.
+3. **Structured transfer**: Not a raw copy-paste — the context is formatted for AI comprehension.
+4. **Frictionless**: One click. No configuration, no accounts, no setup.
+5. **Lightweight**: ~41 KB. No performance impact on your browser.
+6. **Open source**: Full source code available on GitHub.
+
+## Frequently Asked Questions
+
+### Does DuperMemory store my conversations?
+No. DuperMemory operates entirely client-side within your browser. No conversation data is stored, transmitted, or logged anywhere. The context exists only during the transfer process.
+
+### Which AI platforms are supported?
+ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google), Perplexity AI, and DeepSeek. These are the five major AI chat interfaces as of 2025.
+
+### Is DuperMemory free?
+Yes, completely free. It is open source and available on GitHub.
+
+### Does it work with other browsers?
+Currently Chrome only (Manifest V3). Firefox and Edge support may be added in the future.
+
+### Do I need an account?
+No. DuperMemory requires no account, no sign-up, and no API keys.
+
+### Is my data safe?
+Yes. DuperMemory never sends data to any external server. Everything happens locally in your browser. The extension only has permission to access the five supported AI chat domains.
+
+### How is this different from copy-paste?
+DuperMemory captures the full structured conversation (including message roles, code blocks, and formatting) and formats it specifically for another AI to understand. Manual copy-paste loses structure, formatting, and context about who said what.
+
+### Does it work with AI API interfaces?
+No, DuperMemory works with the web chat interfaces only (chat.openai.com, claude.ai, gemini.google.com, perplexity.ai, chat.deepseek.com).
+
+## Contact and Support
+
+- **GitHub Issues**: https://github.com/Tusharkaushik1106/dupermemory/issues
+- **Repository**: https://github.com/Tusharkaushik1106/dupermemory
+- **Creator**: Tushar Kaushik (@Tusharkaushik1106 on GitHub)

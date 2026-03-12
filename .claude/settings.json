@@ -9,7 +9,10 @@
       "WebFetch(domain:contribution.usercontent.google.com)",
       "mcp__stitch__list_projects",
       "WebFetch(domain:cdn.jsdelivr.net)",
-      "Bash(unzip -o \"BlackSansaPro-Thin.zip\" -d fonts/)"
+      "Bash(unzip -o \"BlackSansaPro-Thin.zip\" -d fonts/)",
+      "WebSearch",
+      "WebFetch(domain:llmstxt.org)",
+      "WebFetch(domain:llms-txt.io)"
     ]
   }
 }

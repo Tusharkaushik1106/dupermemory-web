@@ -1,0 +1,57 @@
+# DuperMemory
+
+> DuperMemory is a Chrome extension (Manifest V3) that lets you transfer full conversation context between five AI chat interfaces — ChatGPT, Claude, Gemini, Perplexity, and DeepSeek — in one click. No copy-paste. No context loss.
+
+DuperMemory solves the problem of being locked into a single AI conversation. When one AI isn't giving you the right answer, you shouldn't have to manually copy and reformat your entire thread to try another. DuperMemory captures the full structured transcript and injects it into any of the five supported AI platforms instantly.
+
+- **Category**: AI Productivity Tool / Browser Extension
+- **Platform**: Google Chrome (Manifest V3)
+- **Price**: Free
+- **Status**: Pre-release (manual install via GitHub)
+- **Creator**: Tushar Kaushik
+
+## How It Works
+
+- [Step 1 — Capture](https://dupermemory.com/#how): You're mid-conversation on any supported AI. Click the DuperMemory extension button.
+- [Step 2 — Package](https://dupermemory.com/#how): DuperMemory captures the full transcript and packages it into a structured context block — formatted, clean, and ready for another AI.
+- [Step 3 — Transfer](https://dupermemory.com/#how): Choose your target AI. The context lands in the new chat. The AI reads the thread and continues where the previous one left off.
+
+## Supported Platforms
+
+- [ChatGPT](https://chat.openai.com): OpenAI's conversational AI
+- [Claude](https://claude.ai): Anthropic's AI assistant
+- [Gemini](https://gemini.google.com): Google's AI chat interface
+- [Perplexity](https://perplexity.ai): AI-powered search and answer engine
+- [DeepSeek](https://chat.deepseek.com): DeepSeek's conversational AI
+
+## Key Features
+
+- One-click context transfer between 5 AI platforms
+- Full conversation transcript capture (not raw dump — structured and formatted)
+- No account required — works entirely client-side
+- Zero data sent to external servers — your conversations stay private
+- Manifest V3 compliant — built on Chrome's latest extension standard
+- Lightweight — no background processes, activates only when you click
+
+## Installation
+
+- [Download from GitHub Releases](https://github.com/Tusharkaushik1106/dupermemory/releases/tag/First): Download the .zip file
+- [Chrome Extensions Page](chrome://extensions): Navigate here in your browser
+- Enable Developer Mode — toggle in the top right corner of chrome://extensions
+- Click "Load unpacked" and select the unzipped DuperMemory folder
+
+## Product Stats
+
+- 5 AIs connected
+- 1 click to switch between any AI
+- 0 copy-paste required
+
+## Links
+
+- [Landing Page](https://dupermemory.com): Product homepage with full feature overview
+- [GitHub Repository](https://github.com/Tusharkaushik1106/dupermemory): Source code and releases
+- [Download Extension](https://github.com/Tusharkaushik1106/dupermemory/releases/tag/First): Latest release (.zip)
+
+## Optional
+
+- [LLMs Full Text](https://dupermemory.com/llms-full.txt): Complete detailed documentation for DuperMemory

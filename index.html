@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DuperMemory — One click. Five AIs. Zero copy-paste.</title>
+  <link rel="icon" type="image/png" href="public/assets/logo.png" />
+  <link rel="apple-touch-icon" href="public/assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@400;500&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
@@ -86,12 +88,19 @@
       border-bottom-color: var(--accent);
     }
     .nav-logo {
-      font-family: 'Cormorant Garamond', serif;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'BlackSansaPro', sans-serif;
       font-size: 22px;
-      font-weight: 600;
+      font-weight: 400;
       color: var(--text);
       text-decoration: none;
       letter-spacing: .03em;
+    }
+    .nav-logo img {
+      height: 32px;
+      width: auto;
     }
     .nav-cta {
       font-family: 'DM Sans', sans-serif;
@@ -604,7 +613,14 @@
     /* ─── Install ─── */
     #install { text-align: center; }
     .install-sub { font-size: 17px; color: var(--muted); margin-top: 20px; }
-    .install-steps { max-width: 620px; margin: 80px auto 0; text-align: left; overflow: visible; }
+    .install-layout {
+      display: grid;
+      grid-template-columns: 1fr 2.2fr;
+      gap: 48px;
+      margin-top: 80px;
+      align-items: start;
+    }
+    .install-steps { text-align: left; overflow: visible; }
     .i-step {
       display: grid;
       grid-template-columns: 44px 1fr;
@@ -641,83 +657,58 @@
     }
 
     /* Video preview popup */
-    .i-video-popup {
-      position: absolute;
-      right: -340px;
-      top: 50%;
-      transform: translateY(-50%) scale(0.85);
-      width: 300px;
-      background: var(--deep);
+    /* Video preview area */
+    .install-preview {
       border: 1px solid var(--accent);
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .4s cubic-bezier(.22,1,.36,1),
-                  transform .4s cubic-bezier(.22,1,.36,1);
-      z-index: 10;
-      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      background: #000;
+      position: sticky;
+      top: 120px;
     }
-    .i-step:hover .i-video-popup {
-      opacity: 1;
-      transform: translateY(-50%) scale(1);
-      pointer-events: auto;
-    }
-    .i-video-popup video {
+    .install-preview video {
       width: 100%;
+      height: 420px;
       display: block;
-      aspect-ratio: 16/9;
-      object-fit: cover;
-      background: rgba(65,67,27,.15);
+      object-fit: contain;
+      background: #000;
+      transition: opacity .3s ease;
     }
-    .i-video-label {
-      padding: 10px 14px;
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
+    .install-preview-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--deep);
+      border-top: 1px solid var(--accent);
+    }
+    .install-preview-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--sage);
+      animation: prev-pulse 1.5s ease-in-out infinite;
+    }
+    .install-preview-label {
+      font-family: 'BlackSansaPro', sans-serif;
+      font-size: 11px;
       letter-spacing: .12em;
       color: var(--sage);
       text-transform: uppercase;
-      border-top: 1px solid var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      transition: color .3s ease;
     }
-    .i-video-label::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--sage);
-      animation: vid-pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes vid-pulse {
+    @keyframes prev-pulse {
       0%, 100% { opacity: .4; }
       50% { opacity: 1; }
     }
 
-    /* Position popup on left for steps that would overflow */
-    .i-step.popup-left .i-video-popup {
-      right: auto;
-      left: -340px;
+    /* Active step highlight */
+    .i-step.is-active {
+      background: rgba(65, 67, 27, .1);
     }
+    .i-step.is-active .i-num { color: var(--parchment); }
+    .i-step.is-active .i-text { transform: translateX(6px); }
 
-    @media (max-width: 1100px) {
-      .i-video-popup {
-        right: auto;
-        left: 50%;
-        top: auto;
-        bottom: calc(100% + 12px);
-        transform: translateX(-50%) scale(0.85) translateY(8px);
-        width: 260px;
-      }
-      .i-step:hover .i-video-popup {
-        transform: translateX(-50%) scale(1) translateY(0);
-      }
-      .i-step.popup-left .i-video-popup {
-        left: 50%;
-        right: auto;
-      }
-    }
     .install-cta { margin-top: 72px; }
     .btn-lg {
       font-family: 'DM Sans', sans-serif;
@@ -789,6 +780,8 @@
     @media (max-width: 900px) {
       #memory .section-wrap { grid-template-columns: 1fr; gap: 52px; }
       .stats-grid { grid-template-columns: 1fr; gap: 20px; }
+      .install-layout { grid-template-columns: 1fr; }
+      .install-preview { position: relative; top: 0; margin-top: 32px; }
     }
     @media (max-width: 768px) {
       #nav, #nav.scrolled { padding: 20px 24px; }
@@ -817,7 +810,7 @@
 
 <!-- Navbar -->
 <nav id="nav">
-  <a href="#" class="nav-logo">DuperMemory</a>
+  <a href="#" class="nav-logo"><img src="public/assets/logo.png" alt="DuperMemory logo" />DuperMemory</a>
   <a href="#install" class="nav-cta">Download Extension</a>
 </nav>
 
@@ -1023,37 +1016,32 @@ Open:     Which scheduler works best with LoRA on Flux?
     <span class="label">Installation</span>
     <h2 class="section-heading" id="heading-install">Get it in 60 seconds.</h2>
     <p class="install-sub">Not on the Chrome Web Store yet — here's how to install manually:</p>
-    <div class="install-steps">
-      <div class="i-step fade-up">
-        <span class="i-num" data-idx="0">01</span>
-        <p class="i-text">Download the <code>.zip</code> file from the button below</p>
-        <div class="i-video-popup">
-          <video src="" muted playsinline preload="none"></video>
-          <div class="i-video-label">Step 01 — Download</div>
+    <div class="install-layout">
+      <div class="install-steps">
+        <div class="i-step fade-up" data-video="public/assets/Video Project 001.mp4" data-label="Step 01 — Download">
+          <span class="i-num" data-idx="0">01</span>
+          <p class="i-text">Download the <code>.zip</code> file from the button below</p>
+        </div>
+        <div class="i-step fade-up" data-video="public/assets/video 2.mp4" data-label="Step 02 — Extensions">
+          <span class="i-num" data-idx="1">02</span>
+          <p class="i-text">Go to <code>chrome://extensions</code> in your browser</p>
+        </div>
+        <div class="i-step fade-up" data-video="public/assets/video 3.mp4" data-label="Step 03 — Developer Mode">
+          <span class="i-num" data-idx="2">03</span>
+          <p class="i-text">Enable <code>Developer Mode</code> — toggle in the top right corner</p>
+        </div>
+        <div class="i-step fade-up" data-video="public/assets/video 4.mp4" data-label="Step 04 — Load Extension">
+          <span class="i-num" data-idx="3">04</span>
+          <p class="i-text">Click <code>Load unpacked</code> and select the unzipped folder</p>
         </div>
       </div>
-      <div class="i-step fade-up">
-        <span class="i-num" data-idx="1">02</span>
-        <p class="i-text">Go to <code>chrome://extensions</code> in your browser</p>
-        <div class="i-video-popup">
-          <video src="" muted playsinline preload="none"></video>
-          <div class="i-video-label">Step 02 — Extensions</div>
-        </div>
-      </div>
-      <div class="i-step fade-up">
-        <span class="i-num" data-idx="2">03</span>
-        <p class="i-text">Enable <code>Developer Mode</code> — toggle in the top right corner</p>
-        <div class="i-video-popup">
-          <video src="" muted playsinline preload="none"></video>
-          <div class="i-video-label">Step 03 — Developer Mode</div>
-        </div>
-      </div>
-      <div class="i-step fade-up">
-        <span class="i-num" data-idx="3">04</span>
-        <p class="i-text">Click <code>Load unpacked</code> and select the unzipped folder</p>
-        <div class="i-video-popup">
-          <video src="" muted playsinline preload="none"></video>
-          <div class="i-video-label">Step 04 — Load Extension</div>
+
+      <!-- Video preview — sticky on right -->
+      <div class="install-preview" id="install-preview">
+        <video id="install-video" muted playsinline preload="none"></video>
+        <div class="install-preview-bar">
+          <span class="install-preview-dot"></span>
+          <span class="install-preview-label" id="install-preview-label">Hover a step to preview</span>
         </div>
       </div>
     </div>
@@ -1071,6 +1059,7 @@ Open:     Which scheduler works best with LoRA on Flux?
   <nav class="footer-links">
     <a href="#">GitHub</a>
     <a href="#install">Download</a>
+    <a href="llms.txt">llms.txt</a>
     <a href="#" onclick="if(window.__lenis){window.__lenis.scrollTo(0)}else{window.scrollTo({top:0,behavior:'smooth'})};return false;">Back to top ↑</a>
   </nav>
 </footer>
@@ -1716,27 +1705,43 @@ Open:     Which scheduler works best with LoRA on Flux?
     });
   } catch(e) { console.warn('Feat rows:', e); }
 
-  /* Install steps */
+  /* Install steps + video preview */
   try {
-    document.querySelectorAll('.i-step').forEach(function(el, i) {
+    var previewVideo = document.getElementById('install-video');
+    var previewLabel = document.getElementById('install-preview-label');
+    var allSteps = document.querySelectorAll('.i-step');
+
+    allSteps.forEach(function(el, i) {
       gsap.fromTo(el,
         { opacity: 0, y: 28 },
         { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out', delay: i * 0.11,
           scrollTrigger: { trigger: el, start: 'top 87%' } }
       );
 
-      /* Video popup — auto-play on hover, pause+reset on leave */
-      var video = el.querySelector('.i-video-popup video');
-      if (!video) return;
       el.addEventListener('mouseenter', function() {
-        if (video.src || video.getAttribute('src')) {
-          video.currentTime = 0;
-          video.play().catch(function() {});
+        var src = el.getAttribute('data-video');
+        var label = el.getAttribute('data-label');
+        if (!src || !previewVideo) return;
+
+        // highlight active step
+        allSteps.forEach(function(s) { s.classList.remove('is-active'); });
+        el.classList.add('is-active');
+
+        // swap video
+        if (previewVideo.getAttribute('src') !== src) {
+          previewVideo.src = src;
         }
+        previewVideo.currentTime = 0;
+        previewVideo.play().catch(function() {});
+
+        if (previewLabel) previewLabel.textContent = label;
       });
+
       el.addEventListener('mouseleave', function() {
-        video.pause();
-        video.currentTime = 0;
+        el.classList.remove('is-active');
+        if (previewVideo) {
+          previewVideo.pause();
+        }
       });
     });
   } catch(e) { console.warn('Install steps:', e); }
